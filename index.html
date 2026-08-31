@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muestreo e Inferencia · HumAIno®</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c8a96e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HIA Muestreo">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+<style>
+:root{
+  --bg:#07070d;--surface:#0e0e1a;--surface2:#16162a;--border:#2a2a45;
+  --gold:#c8a96e;--gold-dim:#8a6f3e;--cyan:#4fc3c8;
+  --text:#dde0f0;--muted:#666880;--success:#5dba8a;--warn:#e6854a;
+  --ff-h:'Cormorant Garamond',Georgia,serif;--ff-u:'Syne',sans-serif;--ff-m:'JetBrains Mono',monospace;
+  --r:10px;--hbg:rgba(7,7,13,.85);
+}
+html.light{
+  --bg:#f5f2ec;--surface:#fff;--surface2:#ede8df;--border:#d6cdc0;
+  --gold:#8a5e1e;--gold-dim:#6b4815;--cyan:#1e7a7e;
+  --text:#1c1a2e;--muted:#7a7060;--success:#2a6b4a;--warn:#b04e14;
+  --hbg:rgba(245,242,236,.90);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;transition:background-color .25s,border-color .2s,color .2s;}
+.btn,.tab-btn,.subtab-btn{transition:opacity .18s,transform .12s,background-color .25s,color .2s,border-color .2s !important;}
+body{background:var(--bg);color:var(--text);font-family:var(--ff-u);font-size:15px;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(200,169,110,.07) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 40% at 80% 110%,rgba(79,195,200,.05) 0%,transparent 55%);}
+html.light body{background-image:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(138,94,30,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(30,122,126,.04) 0%,transparent 55%);}
+header{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--border);
+  background:var(--hbg);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--ff-h);font-size:1.1rem;color:var(--gold);letter-spacing:.08em;}
+header h1{font-family:var(--ff-h);font-size:1.4rem;font-weight:600;}
+.badge{font-size:.7rem;font-family:var(--ff-m);background:rgba(200,169,110,.12);color:var(--gold);
+  border:1px solid var(--gold-dim);padding:3px 10px;border-radius:20px;letter-spacing:.12em;}
+.thbtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:20px;
+  padding:5px 13px;font-size:.78rem;font-family:var(--ff-u);font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.thbtn:hover{border-color:var(--gold-dim);color:var(--gold);}
+.tab-bar{display:flex;overflow-x:auto;gap:4px;padding:10px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;font-family:var(--ff-u);font-size:.82rem;font-weight:600;letter-spacing:.04em;
+  background:none;border:none;color:var(--muted);cursor:pointer;padding:10px 18px;
+  border-radius:var(--r) var(--r) 0 0;border-bottom:2px solid transparent;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(200,169,110,.06);}
+.subtab-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:20px;}
+.subtab-btn{flex:1;min-width:110px;font-family:var(--ff-u);font-size:.8rem;font-weight:700;
+  cursor:pointer;padding:10px 12px;border-radius:var(--r);
+  border:2px solid var(--border);background:var(--surface);color:var(--muted);text-align:center;}
+.subtab-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+.subtab-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,.08);}
+.sticon{display:block;font-size:1.1rem;margin-bottom:2px;}
+.stlabel{display:block;font-size:.8rem;}
+main{padding:28px 24px;max-width:1100px;margin:0 auto;}
+.panel{display:none;}.panel.active{display:block;animation:fi .25s ease;}
+.subpanel{display:none;}.subpanel.active{display:block;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.sh{margin-bottom:20px;}.sh h2{font-family:var(--ff-h);font-size:1.85rem;font-weight:600;color:var(--gold);}
+.sh p{color:var(--muted);font-size:.88rem;margin-top:4px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:700px){.g2{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:18px;}
+.ctitle{font-weight:700;font-size:.78rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.04em;}
+input[type=number],input[type=text],select{width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--ff-m);font-size:.88rem;padding:8px 12px;border-radius:7px;outline:none;}
+input:focus,select:focus{border-color:var(--gold-dim);}
+input[type=range]{width:100%;accent-color:var(--gold);}
+.fr{margin-bottom:13px;}
+.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));
+  color:#07070d;font-family:var(--ff-u);font-weight:700;font-size:.85rem;letter-spacing:.06em;
+  border:none;border-radius:8px;padding:10px 22px;cursor:pointer;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.metrics{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;}
+.metric{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;min-width:90px;flex:1;}
+.mlbl{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.mval{font-family:var(--ff-m);font-size:1.15rem;font-weight:500;color:var(--gold);}
+.mval.hi{color:var(--cyan);}
+.mval.ok{color:var(--success);}
+.mval.bad{color:var(--warn);}
+.alert{border-radius:8px;padding:13px 16px;font-size:.88rem;margin-top:12px;line-height:1.7;}
+.as{background:rgba(93,186,138,.1);border:1px solid rgba(93,186,138,.3);color:var(--success);}
+.ai{background:rgba(79,195,200,.1);border:1px solid rgba(79,195,200,.3);color:var(--cyan);}
+.aw{background:rgba(230,133,74,.1);border:1px solid rgba(230,133,74,.3);color:var(--warn);}
+.ibox{background:rgba(200,169,110,.06);border-left:3px solid var(--gold-dim);border-radius:0 8px 8px 0;padding:12px 16px;font-size:.85rem;color:var(--text);margin-bottom:14px;}
+.ibox strong{color:var(--gold);}
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-wrap:wrap;}
+.seg input[type=radio]{display:none;}
+.seg label{padding:7px 13px;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--muted);}
+.seg input[type=radio]:checked+label{background:var(--gold-dim);color:#fff;}
+.rv{font-family:var(--ff-m);color:var(--gold);font-size:.88rem;}
+/* Result block */
+.res-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-top:16px;}
+.res-block h3{font-family:var(--ff-h);font-size:1.2rem;color:var(--gold);margin-bottom:10px;}
+.res-line{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(42,42,69,.3);font-size:.88rem;}
+.res-line:last-child{border-bottom:none;}
+.res-label{color:var(--muted);font-size:.82rem;}
+.res-val{font-family:var(--ff-m);font-weight:600;color:var(--text);}
+.res-val.sig{color:var(--success);}.res-val.ns{color:var(--muted);}
+/* Strat table */
+.strat-tbl{width:100%;border-collapse:collapse;margin:10px 0;}
+.strat-tbl th{background:var(--surface2);color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;}
+.strat-tbl td{padding:5px 6px;border-bottom:1px solid rgba(42,42,69,.3);text-align:center;}
+.strat-tbl input{width:90px;padding:5px 8px;font-size:.82rem;}
+.strat-tbl td.sh{color:var(--gold-dim);font-family:var(--ff-m);font-weight:700;font-size:.9rem;}
+/* Refs */
+.ctog{background:none;border:none;color:var(--muted);font-family:var(--ff-u);font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0;}
+.ctog:hover{color:var(--gold);}
+.ctog .arr{transition:transform .2s;display:inline-block;}
+.ctog.open .arr{transform:rotate(90deg);}
+.coll{display:none;margin-top:12px;}.coll.open{display:block;}
+.ref-list{text-align:left;font-size:.78rem;line-height:1.8;color:var(--muted);background:var(--surface2);border-radius:var(--r);padding:16px 20px;margin-top:12px;}
+.ref-list p{margin-bottom:6px;padding-left:20px;text-indent:-20px;}
+.ref-list em{color:var(--text);}
+footer{text-align:center;padding:28px 20px;font-size:.75rem;color:var(--muted);border-top:1px solid var(--border);margin-top:20px;}
+footer a{color:var(--gold-dim);text-decoration:none;}
+@media(max-width:500px){header h1{font-size:1.05rem;}main{padding:16px 12px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">HumAIno®</span>
+  <span style="color:var(--border)">│</span>
+  <h1>Muestreo e Inferencia</h1>
+  <span class="badge" style="margin-left:auto">v1.0</span>
+  <button class="thbtn" onclick="toggleTheme()"><span id="thi">☀️</span><span id="thl">Claro</span></button>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="swT(0)">📐 Tamaño de Muestra</button>
+  <button class="tab-btn" onclick="swT(1)">🗂️ Tipo de Muestreo</button>
+  <button class="tab-btn" onclick="swT(2)">📊 Pruebas de Varianza</button>
+  <button class="tab-btn" onclick="swT(3)">🔬 Pruebas de Proporciones</button>
+</div>
+
+<main>
+
+<!-- ══ P0: TAMAÑO DE MUESTRA ══ -->
+<section class="panel active" id="p0">
+  <div class="sh"><h2>Calculadora de Tamaño de Muestra</h2>
+    <p>Basada en margen de error (estimación) y potencia estadística (contraste de hipótesis)</p></div>
+  <div class="subtab-bar">
+    <button class="subtab-btn active" id="ts-b0" onclick="swTS(0)"><span class="sticon">μ</span><span class="stlabel">Para μ</span></button>
+    <button class="subtab-btn" id="ts-b1" onclick="swTS(1)"><span class="sticon">p</span><span class="stlabel">Para p</span></button>
+    <button class="subtab-btn" id="ts-b2" onclick="swTS(2)"><span class="sticon">μ₁−μ₂</span><span class="stlabel">Dif. de Medias</span></button>
+    <button class="subtab-btn" id="ts-b3" onclick="swTS(3)"><span class="sticon">p₁−p₂</span><span class="stlabel">Dif. de Prop.</span></button>
+  </div>
+
+  <!-- Para μ -->
+  <div class="subpanel active" id="ts-0">
+    <div class="ibox"><strong>Estimación de μ</strong> — con σ conocida o estimada.<br>
+      <strong>n₀ = (z_{α/2} · σ / E)²</strong> · Con corrección por finitud: n = n₀N/(n₀+N−1)</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>σ (desviación estándar):</label><input type="number" id="m-sigma" value="15" min="0.01" step="0.1"></div>
+        <div class="fr"><label>E (margen de error máximo admisible):</label><input type="number" id="m-e" value="5" min="0.01" step="0.1"></div>
+        <div class="fr"><label>Nivel de confianza (1−α)</label>
+          <select id="m-alpha"><option value="0.01">99% (α=0.01)</option><option value="0.05" selected>95% (α=0.05)</option><option value="0.10">90% (α=0.10)</option></select></div>
+        <div class="fr"><label>N (tamaño de la población, 0 = infinita):</label><input type="number" id="m-n" value="0" min="0" step="1"></div>
+        <button class="btn" onclick="calcTamMu()">⚡ Calcular n</button>
+      </div>
+      <div class="card" id="mu-res" style="display:none">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="mu-met"></div>
+        <div id="mu-alr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Para p -->
+  <div class="subpanel" id="ts-1">
+    <div class="ibox"><strong>Estimación de p</strong> — proporción poblacional.<br>
+      <strong>n₀ = z²_{α/2} · p̂(1−p̂) / E²</strong> · Si p̂ desconocida, usar p̂ = 0.5 (conservador).</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>p̂ (proporción estimada, 0.5 = conservador): <span id="pp-v" class="rv">0.50</span></label>
+          <input type="range" id="pp-sl" min="1" max="99" value="50" oninput="document.getElementById('pp-v').textContent=(this.value/100).toFixed(2)"></div>
+        <div class="fr"><label>E (margen de error):</label><input type="number" id="pp-e" value="0.05" min="0.001" max="0.5" step="0.001"></div>
+        <div class="fr"><label>Nivel de confianza (1−α)</label>
+          <select id="pp-alpha"><option value="0.01">99%</option><option value="0.05" selected>95%</option><option value="0.10">90%</option></select></div>
+        <div class="fr"><label>N (0 = infinita):</label><input type="number" id="pp-n" value="0" min="0"></div>
+        <button class="btn" onclick="calcTamP()">⚡ Calcular n</button>
+      </div>
+      <div class="card" id="pp-res" style="display:none">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="pp-met"></div>
+        <div id="pp-alr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Para μ₁−μ₂ -->
+  <div class="subpanel" id="ts-2">
+    <div class="ibox"><strong>Contraste μ₁−μ₂</strong> — diseño balanceado, varianzas iguales (σ² pooled).<br>
+      <strong>n = 2(z_{α/2}+z_β)² σ² / Δ²</strong> por grupo.</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>σ (desviación estándar poblacional):</label><input type="number" id="dd-sigma" value="10" min="0.01" step="0.1"></div>
+        <div class="fr"><label>Δ (diferencia mínima detectable):</label><input type="number" id="dd-delta" value="5" min="0.01" step="0.1"></div>
+        <div class="fr"><label>Nivel de significancia (α)</label>
+          <select id="dd-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <div class="fr"><label>Potencia (1−β)</label>
+          <select id="dd-beta"><option value="0.70">0.70</option><option value="0.80" selected>0.80</option><option value="0.90">0.90</option><option value="0.95">0.95</option></select></div>
+        <button class="btn" onclick="calcTamDifMu()">⚡ Calcular n</button>
+      </div>
+      <div class="card" id="dd-res" style="display:none">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="dd-met"></div>
+        <div id="dd-alr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Para p₁−p₂ -->
+  <div class="subpanel" id="ts-3">
+    <div class="ibox"><strong>Contraste p₁−p₂</strong> — dos proporciones independientes.<br>
+      <strong>n = [z_{α/2}√(2p̄q̄) + z_β√(p₁q₁+p₂q₂)]² / (p₁−p₂)²</strong> por grupo.</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>p₁ (proporción grupo 1): <span id="dp1-v" class="rv">0.50</span></label>
+          <input type="range" id="dp1" min="1" max="99" value="50" oninput="document.getElementById('dp1-v').textContent=(this.value/100).toFixed(2)"></div>
+        <div class="fr"><label>p₂ (proporción grupo 2): <span id="dp2-v" class="rv">0.30</span></label>
+          <input type="range" id="dp2" min="1" max="99" value="30" oninput="document.getElementById('dp2-v').textContent=(this.value/100).toFixed(2)"></div>
+        <div class="fr"><label>α</label>
+          <select id="dp-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <div class="fr"><label>Potencia (1−β)</label>
+          <select id="dp-beta"><option value="0.70">0.70</option><option value="0.80" selected>0.80</option><option value="0.90">0.90</option><option value="0.95">0.95</option></select></div>
+        <button class="btn" onclick="calcTamDifP()">⚡ Calcular n</button>
+      </div>
+      <div class="card" id="dp-res" style="display:none">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="dp-met"></div>
+        <div id="dp-alr"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ P1: TIPO DE MUESTREO ══ -->
+<section class="panel" id="p1">
+  <div class="sh"><h2>Tipo de Muestreo</h2>
+    <p>Calcula el tamaño de muestra y asignación según el diseño muestral</p></div>
+  <div class="subtab-bar">
+    <button class="subtab-btn active" id="tm-b0" onclick="swTM(0)"><span class="sticon">🎲</span><span class="stlabel">MAS</span></button>
+    <button class="subtab-btn" id="tm-b1" onclick="swTM(1)"><span class="sticon">📊</span><span class="stlabel">Estratificado</span></button>
+    <button class="subtab-btn" id="tm-b2" onclick="swTM(2)"><span class="sticon">🔵</span><span class="stlabel">Conglomerados</span></button>
+    <button class="subtab-btn" id="tm-b3" onclick="swTM(3)"><span class="sticon">📏</span><span class="stlabel">Sistemático</span></button>
+  </div>
+
+  <!-- MAS -->
+  <div class="subpanel active" id="tm-0">
+    <div class="ibox"><strong>Muestreo Aleatorio Simple (MAS)</strong> — cada unidad tiene igual probabilidad de ser seleccionada.<br>
+      Con corrección por finitud si n/N ≥ 5%: <strong>n = n₀/(1 + n₀/N)</strong></div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>Estimación de</label>
+          <div class="seg">
+            <input type="radio" name="mas-t" id="mas-mu" value="mu" checked onchange="calcMAS()"><label for="mas-mu">Media (μ)</label>
+            <input type="radio" name="mas-t" id="mas-p"  value="p"  onchange="calcMAS()"><label for="mas-p">Proporción (p)</label>
+          </div></div>
+        <div id="mas-sigma-row" class="fr"><label>σ (desviación estándar):</label><input type="number" id="mas-sigma" value="20" min="0.01" step="0.1" oninput="calcMAS()"></div>
+        <div id="mas-phat-row" class="fr" style="display:none"><label>p̂: <span id="mas-ph-v" class="rv">0.50</span></label>
+          <input type="range" id="mas-ph" min="1" max="99" value="50" oninput="document.getElementById('mas-ph-v').textContent=(this.value/100).toFixed(2);calcMAS()"></div>
+        <div class="fr"><label>E (margen de error):</label><input type="number" id="mas-e" value="5" min="0.001" step="0.1" oninput="calcMAS()"></div>
+        <div class="fr"><label>Nivel de confianza</label>
+          <select id="mas-alpha" onchange="calcMAS()">
+            <option value="0.01">99%</option><option value="0.05" selected>95%</option><option value="0.10">90%</option></select></div>
+        <div class="fr"><label>N (tamaño de la población):</label><input type="number" id="mas-N" value="500" min="10" step="1" oninput="calcMAS()"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="mas-met"></div>
+        <div id="mas-alr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTRATIFICADO -->
+  <div class="subpanel" id="tm-1">
+    <div class="ibox"><strong>Muestreo Estratificado</strong> — la población se divide en H estratos homogéneos internamente.<br>
+      <strong>Proporcional:</strong> n_h = n·N_h/N &nbsp;·&nbsp;
+      <strong>Neyman:</strong> n_h = n·N_h·σ_h / Σ(N_i·σ_i)</div>
+    <div class="card">
+      <div class="ctitle">Configuración</div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="margin:0">H (estratos):</label>
+        <select id="strat-H" style="width:80px" onchange="buildStratTable()">
+          <option value="2">2</option><option value="3" selected>3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+        <label style="margin:0">α:</label>
+        <select id="strat-alpha" style="width:120px">
+          <option value="0.01">0.01 (99%)</option><option value="0.05" selected>0.05 (95%)</option><option value="0.10">0.10 (90%)</option>
+        </select>
+        <label style="margin:0">E:</label>
+        <input type="number" id="strat-e" value="5" min="0.01" step="0.1" style="width:80px">
+      </div>
+      <table class="strat-tbl" id="strat-tbl-in">
+        <thead><tr><th>Estrato h</th><th>N_h (tamaño)</th><th>σ_h (desv. est.)</th></tr></thead>
+        <tbody id="strat-rows"></tbody>
+      </table>
+      <button class="btn" style="margin-top:14px" onclick="calcEstrat()">⚡ Calcular asignación</button>
+    </div>
+    <div id="strat-res" style="display:none">
+      <div class="metrics" id="strat-met"></div>
+      <div class="card">
+        <div class="ctitle">Asignación por estrato</div>
+        <div id="strat-detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONGLOMERADOS -->
+  <div class="subpanel" id="tm-2">
+    <div class="ibox"><strong>Muestreo por Conglomerados</strong> — se seleccionan grupos (conglomerados) completos.<br>
+      <strong>DEFF = 1 + (M̄−1)·ICC</strong> &nbsp;·&nbsp; <strong>n_cong = ⌈n_MAS · DEFF / M̄⌉</strong><br>
+      ICC (Coeficiente de Correlación Intraclase) mide homogeneidad dentro de los conglomerados.</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>N (conglomerados totales en la población):</label><input type="number" id="cg-N" value="100" min="2"></div>
+        <div class="fr"><label>M̄ (tamaño promedio del conglomerado):</label><input type="number" id="cg-M" value="20" min="2" step="1"></div>
+        <div class="fr"><label>n_MAS (n requerida bajo MAS con igual costo):</label><input type="number" id="cg-nmas" value="100" min="2"></div>
+        <div class="fr"><label>ICC (correlación intraclase, típica 0.01–0.30): <span id="cg-icc-v" class="rv">0.05</span></label>
+          <input type="range" id="cg-icc" min="1" max="80" value="5" oninput="document.getElementById('cg-icc-v').textContent=(this.value/100).toFixed(2)"></div>
+        <button class="btn" onclick="calcConglom()">⚡ Calcular</button>
+      </div>
+      <div class="card" id="cg-res" style="display:none">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="cg-met"></div>
+        <div id="cg-alr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SISTEMÁTICO -->
+  <div class="subpanel" id="tm-3">
+    <div class="ibox"><strong>Muestreo Sistemático</strong> — se selecciona cada k-ésima unidad de un listado ordenado.<br>
+      <strong>k = N/n</strong> (intervalo de muestreo) · Inicio aleatorio r entre 1 y k.</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Parámetros</div>
+        <div class="fr"><label>N (tamaño de la población):</label><input type="number" id="sist-N" value="1000" min="10" step="1" oninput="calcSist()"></div>
+        <div class="fr"><label>n (tamaño de muestra deseado):</label><input type="number" id="sist-n" value="50" min="2" step="1" oninput="calcSist()"></div>
+      </div>
+      <div class="card" id="sist-res">
+        <div class="ctitle">Resultados</div>
+        <div class="metrics" id="sist-met"></div>
+        <div id="sist-alr"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ P2: PRUEBAS DE VARIANZA ══ -->
+<section class="panel" id="p2">
+  <div class="sh"><h2>Pruebas de Hipótesis para Varianzas</h2>
+    <p>Chi-cuadrada para una varianza · F de Fisher para dos varianzas</p></div>
+  <div class="subtab-bar">
+    <button class="subtab-btn active" id="pv-b0" onclick="swPV(0)"><span class="sticon">χ²</span><span class="stlabel">Una Varianza</span></button>
+    <button class="subtab-btn" id="pv-b1" onclick="swPV(1)"><span class="sticon">F</span><span class="stlabel">Dos Varianzas</span></button>
+  </div>
+
+  <!-- Una Varianza -->
+  <div class="subpanel active" id="pv-0">
+    <div class="ibox"><strong>Prueba χ² para H₀: σ² = σ₀²</strong><br>
+      <strong>χ² = (n−1)S² / σ₀²</strong> con ν = n−1 grados de libertad.<br>
+      Intervalo de confianza: [(n−1)S²/χ²_{α/2} , (n−1)S²/χ²_{1−α/2}]</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Datos de la muestra</div>
+        <div class="fr"><label>n (tamaño de muestra):</label><input type="number" id="cv-n" value="20" min="2"></div>
+        <div class="fr"><label>S² (varianza muestral):</label><input type="number" id="cv-s2" value="150" min="0.001" step="0.01"></div>
+        <div class="fr"><label>σ₀² (varianza hipotética bajo H₀):</label><input type="number" id="cv-s02" value="100" min="0.001" step="0.01"></div>
+        <div class="fr"><label>Hipótesis alternativa H₁</label>
+          <div class="seg">
+            <input type="radio" name="cv-h" id="cv-h1" value="ne" checked><label for="cv-h1">σ² ≠ σ₀²</label>
+            <input type="radio" name="cv-h" id="cv-h2" value="gt"><label for="cv-h2">σ² &gt; σ₀²</label>
+            <input type="radio" name="cv-h" id="cv-h3" value="lt"><label for="cv-h3">σ² &lt; σ₀²</label>
+          </div></div>
+        <div class="fr"><label>α (nivel de significancia)</label>
+          <select id="cv-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <button class="btn" onclick="calcVarOne()">⚡ Calcular</button>
+      </div>
+      <div class="card" id="cv-res" style="display:none">
+        <div class="ctitle">Resultado de la prueba</div>
+        <div id="cv-out"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dos Varianzas -->
+  <div class="subpanel" id="pv-1">
+    <div class="ibox"><strong>Prueba F para H₀: σ₁² = σ₂²</strong><br>
+      <strong>F = S₁² / S₂²</strong> con ν₁ = n₁−1 y ν₂ = n₂−1 grados de libertad.<br>
+      Convenio: coloca la muestra con mayor S² en el numerador (F ≥ 1).</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Datos de ambas muestras</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="fr"><label>n₁:</label><input type="number" id="fv-n1" value="16" min="2"></div>
+            <div class="fr"><label>S₁²:</label><input type="number" id="fv-s1" value="46.2" min="0.001" step="0.01"></div>
+          </div>
+          <div>
+            <div class="fr"><label>n₂:</label><input type="number" id="fv-n2" value="21" min="2"></div>
+            <div class="fr"><label>S₂²:</label><input type="number" id="fv-s2" value="37.1" min="0.001" step="0.01"></div>
+          </div>
+        </div>
+        <div class="fr"><label>Hipótesis alternativa H₁</label>
+          <div class="seg">
+            <input type="radio" name="fv-h" id="fv-h1" value="ne" checked><label for="fv-h1">σ₁² ≠ σ₂²</label>
+            <input type="radio" name="fv-h" id="fv-h2" value="gt"><label for="fv-h2">σ₁² &gt; σ₂²</label>
+            <input type="radio" name="fv-h" id="fv-h3" value="lt"><label for="fv-h3">σ₁² &lt; σ₂²</label>
+          </div></div>
+        <div class="fr"><label>α</label>
+          <select id="fv-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <button class="btn" onclick="calcVarTwo()">⚡ Calcular</button>
+      </div>
+      <div class="card" id="fv-res" style="display:none">
+        <div class="ctitle">Resultado de la prueba</div>
+        <div id="fv-out"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ P3: PRUEBAS DE PROPORCIONES ══ -->
+<section class="panel" id="p3">
+  <div class="sh"><h2>Pruebas de Hipótesis para Proporciones</h2>
+    <p>Prueba Z para una o dos proporciones · Intervalos de confianza (Wald y Wilson)</p></div>
+  <div class="subtab-bar">
+    <button class="subtab-btn active" id="pp2-b0" onclick="swPP(0)"><span class="sticon">p</span><span class="stlabel">Una Proporción</span></button>
+    <button class="subtab-btn" id="pp2-b1" onclick="swPP(1)"><span class="sticon">p₁−p₂</span><span class="stlabel">Dos Proporciones</span></button>
+  </div>
+
+  <!-- Una Proporción -->
+  <div class="subpanel active" id="pp2-0">
+    <div class="ibox"><strong>Prueba Z para H₀: p = p₀</strong><br>
+      <strong>z = (p̂ − p₀) / √(p₀q₀/n)</strong><br>
+      IC de Wald: p̂ ± z_{α/2}√(p̂q̂/n) &nbsp;·&nbsp; IC de Wilson (más preciso para n pequeño o p extrema).</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Datos de la muestra</div>
+        <div class="fr"><label>n (tamaño de muestra):</label><input type="number" id="pz-n" value="200" min="1"></div>
+        <div class="fr"><label>x (número de éxitos observados):</label><input type="number" id="pz-x" value="94" min="0"></div>
+        <div class="fr"><label>p₀ (proporción hipotética bajo H₀): <span id="pz-p0v" class="rv">0.50</span></label>
+          <input type="range" id="pz-p0" min="1" max="99" value="50" oninput="document.getElementById('pz-p0v').textContent=(this.value/100).toFixed(2)"></div>
+        <div class="fr"><label>Hipótesis alternativa H₁</label>
+          <div class="seg">
+            <input type="radio" name="pz-h" id="pz-h1" value="ne" checked><label for="pz-h1">p ≠ p₀</label>
+            <input type="radio" name="pz-h" id="pz-h2" value="gt"><label for="pz-h2">p &gt; p₀</label>
+            <input type="radio" name="pz-h" id="pz-h3" value="lt"><label for="pz-h3">p &lt; p₀</label>
+          </div></div>
+        <div class="fr"><label>α</label>
+          <select id="pz-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <button class="btn" onclick="calcPropOne()">⚡ Calcular</button>
+      </div>
+      <div class="card" id="pz-res" style="display:none">
+        <div class="ctitle">Resultado</div>
+        <div id="pz-out"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dos Proporciones -->
+  <div class="subpanel" id="pp2-1">
+    <div class="ibox"><strong>Prueba Z para H₀: p₁ = p₂</strong><br>
+      <strong>z = (p̂₁ − p̂₂) / √[p̄q̄(1/n₁ + 1/n₂)]</strong> &nbsp;donde&nbsp; p̄ = (x₁+x₂)/(n₁+n₂)<br>
+      IC para p₁−p₂: (p̂₁−p̂₂) ± z_{α/2}√(p̂₁q̂₁/n₁ + p̂₂q̂₂/n₂)</div>
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle">Datos de ambas muestras</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="fr"><label>n₁:</label><input type="number" id="p2-n1" value="150" min="1"></div>
+            <div class="fr"><label>x₁ (éxitos):</label><input type="number" id="p2-x1" value="73" min="0"></div>
+          </div>
+          <div>
+            <div class="fr"><label>n₂:</label><input type="number" id="p2-n2" value="180" min="1"></div>
+            <div class="fr"><label>x₂ (éxitos):</label><input type="number" id="p2-x2" value="65" min="0"></div>
+          </div>
+        </div>
+        <div class="fr"><label>Hipótesis alternativa H₁</label>
+          <div class="seg">
+            <input type="radio" name="p2-h" id="p2-h1" value="ne" checked><label for="p2-h1">p₁ ≠ p₂</label>
+            <input type="radio" name="p2-h" id="p2-h2" value="gt"><label for="p2-h2">p₁ &gt; p₂</label>
+            <input type="radio" name="p2-h" id="p2-h3" value="lt"><label for="p2-h3">p₁ &lt; p₂</label>
+          </div></div>
+        <div class="fr"><label>α</label>
+          <select id="p2-alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.10">0.10</option></select></div>
+        <button class="btn" onclick="calcPropTwo()">⚡ Calcular</button>
+      </div>
+      <div class="card" id="p2-res" style="display:none">
+        <div class="ctitle">Resultado</div>
+        <div id="p2-out"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div style="max-width:720px;margin:0 auto">
+    <p style="font-size:.95rem;font-weight:700;color:var(--gold);font-family:var(--ff-h);letter-spacing:.06em;margin-bottom:6px">
+      Muestreo e Inferencia · v1.0</p>
+    <p style="margin-bottom:10px">
+      <span style="color:var(--text)">© 2025 <strong>Dr. Luis Antonio Chel-Guerrero</strong></span><br>
+      <span style="color:var(--muted);font-size:.8rem">Obra de autoría colaborativa humano–IA</span></p>
+    <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.es" target="_blank"
+       style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+              background:rgba(200,169,110,.08);border:1px solid var(--border);
+              border-radius:8px;padding:8px 14px;margin-bottom:14px">
+      <img src="https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png" alt="CC BY-NC-ND 4.0" style="height:22px;border-radius:3px">
+      <span style="font-size:.78rem;color:var(--muted);line-height:1.4">
+        Licencia <strong style="color:var(--gold)">CC BY-NC-ND 4.0</strong> Internacional<br>
+        Uso académico libre · citar al autor · sin modificaciones · sin uso comercial</span>
+    </a>
+    <p style="font-size:.75rem;color:var(--muted);line-height:1.7;margin-bottom:10px">
+      Asistencia de IA: <strong>Claude</strong> (Anthropic) vía <strong>HumAIno®</strong><br>
+      <strong>HumAIno®</strong> marca registrada IMPI · Reg. 3019130 · Titular: Lilian Dolores Chel Guerrero · Vigencia: 2036</p>
+    <div style="margin-bottom:12px">
+      <button class="ctog" id="ref-tog" onclick="document.getElementById('ref-tog').classList.toggle('open');document.getElementById('ref-coll').classList.toggle('open')">
+        <span class="arr">▶</span> 📚 Referencias bibliográficas
+      </button>
+      <div class="coll" id="ref-coll">
+        <div class="ref-list">
+          <p><strong>1.</strong> Walpole, R. E., Myers, R. H., Myers, S. L. &amp; Ye, K. (2012). <em>Probabilidad y estadística para ingeniería y ciencias</em> (9a ed.). Pearson Prentice Hall.</p>
+          <p><strong>2.</strong> Cochran, W. G. (1977). <em>Sampling techniques</em> (3rd ed.). John Wiley &amp; Sons.</p>
+          <p><strong>3.</strong> Scheaffer, R. L., Mendenhall, W. &amp; Ott, R. L. (2007). <em>Elementary survey sampling</em> (6th ed.). Duxbury Press.</p>
+          <p><strong>4.</strong> Montgomery, D. C. &amp; Runger, G. C. (2018). <em>Applied statistics and probability for engineers</em> (7th ed.). John Wiley &amp; Sons.</p>
+          <p><strong>5.</strong> Devore, J. L. (2016). <em>Probability and statistics for engineering and the sciences</em> (9th ed.). Cengage Learning.</p>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:var(--border)"><a href="https://humaino.com" target="_blank">humaino.com</a> · Mérida, Yucatán, México</p>
+  </div>
+</footer>
+
+<script>
+/* ══ THEME ═══════════════════════════════════════════════════════ */
+let isDark=true;
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.classList.toggle('light',!isDark);
+  document.getElementById('thi').textContent=isDark?'☀️':'🌙';
+  document.getElementById('thl').textContent=isDark?'Claro':'Oscuro';
+  localStorage.setItem('theme-mi',isDark?'dark':'light');
+}
+
+/* ══ NAVIGATION ══════════════════════════════════════════════════ */
+const panels=document.querySelectorAll('.panel'),tabBtns=document.querySelectorAll('.tab-btn');
+function swT(i){panels.forEach((p,j)=>p.classList.toggle('active',j===i));tabBtns.forEach((b,j)=>b.classList.toggle('active',j===i));}
+function swTS(i){[0,1,2,3].forEach(j=>{document.getElementById(`ts-${j}`).classList.toggle('active',j===i);document.getElementById(`ts-b${j}`).classList.toggle('active',j===i);});}
+function swTM(i){[0,1,2,3].forEach(j=>{document.getElementById(`tm-${j}`).classList.toggle('active',j===i);document.getElementById(`tm-b${j}`).classList.toggle('active',j===i);});}
+function swPV(i){[0,1].forEach(j=>{document.getElementById(`pv-${j}`).classList.toggle('active',j===i);document.getElementById(`pv-b${j}`).classList.toggle('active',j===i);});}
+function swPP(i){[0,1].forEach(j=>{document.getElementById(`pp2-${j}`).classList.toggle('active',j===i);document.getElementById(`pp2-b${j}`).classList.toggle('active',j===i);});}
+
+/* ══ MATH HELPERS ════════════════════════════════════════════════ */
+const zp=p=>jStat.normal.inv(p,0,1);
+const f4=v=>isNaN(v)||!isFinite(v)?'—':v.toFixed(4);
+const f2=v=>isNaN(v)||!isFinite(v)?'—':v.toFixed(2);
+const pstr=p=>p<0.0001?'< 0.0001':p.toFixed(4);
+function mH(arr){return`<div class="metrics">${arr.map(d=>`<div class="metric"><div class="mlbl">${d.l}</div><div class="mval${d.c?' '+d.c:''}">${d.v}</div></div>`).join('')}</div>`;}
+function decisionHTML(reject,alpha){
+  return reject
+    ?`<div class="alert as">✅ <strong>Se rechaza H₀</strong> — resultado estadísticamente significativo (α = ${alpha}).</div>`
+    :`<div class="alert ai">❌ <strong>No se rechaza H₀</strong> — evidencia insuficiente para rechazarla (α = ${alpha}).</div>`;
+}
+function resHTML(rows){
+  return`<div class="res-block">${rows.map(r=>`<div class="res-line"><span class="res-label">${r.l}</span><span class="res-val${r.c?' '+r.c:''}">${r.v}</span></div>`).join('')}</div>`;
+}
+
+/* ══ TAMAÑO DE MUESTRA — Para μ ═════════════════════════════════ */
+function calcTamMu(){
+  const sigma=+document.getElementById('m-sigma').value||15;
+  const E=+document.getElementById('m-e').value||5;
+  const alpha=+document.getElementById('m-alpha').value||0.05;
+  const N=+document.getElementById('m-n').value||0;
+  const z=zp(1-alpha/2);
+  const n0=Math.ceil((z*sigma/E)**2);
+  const n=N>0?Math.ceil(n0*N/(n0+N-1)):n0;
+  const fpc=N>0?n/N:null;
+  document.getElementById('mu-res').style.display='';
+  document.getElementById('mu-met').innerHTML=mH([
+    {l:'z_{α/2}',v:z.toFixed(4)},{l:'n₀ (sin FPC)',v:n0+''},
+    {l:'n (con FPC)',v:N>0?n+'':'= n₀'},{l:'f = n/N',v:N>0?(fpc*100).toFixed(1)+'%':'N/A'}]);
+  const fpcNote=N>0&&fpc<0.05?'✓ n/N < 5% — la corrección por finitud tiene poco efecto.':
+    N>0?`⚠️ n/N = ${(fpc*100).toFixed(1)}% — la corrección por finitud es relevante.`:'';
+  document.getElementById('mu-alr').innerHTML=
+    `<div class="alert as">Con n = <strong>${N>0?n:n0}</strong> se estima μ con un error máximo de ±${E} y ${((1-alpha)*100).toFixed(0)}% de confianza.</div>`+
+    (fpcNote?`<div class="alert ai">${fpcNote}</div>`:'');
+}
+
+/* ══ TAMAÑO DE MUESTRA — Para p ═════════════════════════════════ */
+function calcTamP(){
+  const ph=document.getElementById('pp-sl').value/100;
+  const E=+document.getElementById('pp-e').value||0.05;
+  const alpha=+document.getElementById('pp-alpha').value||0.05;
+  const N=+document.getElementById('pp-n').value||0;
+  const z=zp(1-alpha/2);
+  const n0=Math.ceil(z*z*ph*(1-ph)/E/E);
+  const n=N>0?Math.ceil(n0*N/(n0+N-1)):n0;
+  document.getElementById('pp-res').style.display='';
+  document.getElementById('pp-met').innerHTML=mH([
+    {l:'z_{α/2}',v:z.toFixed(4)},{l:'p̂(1−p̂)',v:(ph*(1-ph)).toFixed(4)},
+    {l:'n₀',v:n0+''},{l:'n (FPC)',v:N>0?n+'':'= n₀'}]);
+  document.getElementById('pp-alr').innerHTML=
+    `<div class="alert as">Con n = <strong>${N>0?n:n0}</strong> se estima p con error máximo ±${E} y ${((1-alpha)*100).toFixed(0)}% de confianza.</div>`+
+    (ph===0.5?'<div class="alert ai">ℹ️ p̂ = 0.5 — estimación conservadora (máximo n posible).</div>':'');
+}
+
+/* ══ TAMAÑO DE MUESTRA — Diferencia de Medias ══════════════════ */
+function calcTamDifMu(){
+  const sigma=+document.getElementById('dd-sigma').value||10;
+  const delta=+document.getElementById('dd-delta').value||5;
+  const alpha=+document.getElementById('dd-alpha').value||0.05;
+  const beta=+document.getElementById('dd-beta').value||0.80;
+  const za=zp(1-alpha/2),zb=zp(beta);
+  const d=delta/sigma;
+  const n=Math.ceil(2*((za+zb)/d)**2);
+  document.getElementById('dd-res').style.display='';
+  document.getElementById('dd-met').innerHTML=mH([
+    {l:'d Cohen',v:d.toFixed(3)},{l:'n por grupo',v:n+'',c:'hi'},
+    {l:'n total',v:2*n+''},{l:'Potencia',v:((+beta)*100).toFixed(0)+'%'}]);
+  const efecto=d<0.5?'Pequeño 🟡':d<0.8?'Mediano 🔵':'Grande 🟢';
+  document.getElementById('dd-alr').innerHTML=
+    `<div class="alert as">Con <strong>n = ${n} por grupo</strong> se detecta Δ = ${delta} con ${((+beta)*100).toFixed(0)}% de potencia.</div>
+     <div class="alert ai">Tamaño del efecto: <strong>${efecto}</strong> (d = ${d.toFixed(3)})</div>`;
+}
+
+/* ══ TAMAÑO DE MUESTRA — Diferencia de Proporciones ════════════ */
+function calcTamDifP(){
+  const p1=document.getElementById('dp1').value/100,p2=document.getElementById('dp2').value/100;
+  const alpha=+document.getElementById('dp-alpha').value||0.05;
+  const beta=+document.getElementById('dp-beta').value||0.80;
+  if(Math.abs(p1-p2)<0.001){alert('p₁ y p₂ deben ser diferentes');return;}
+  const pb=(p1+p2)/2,za=zp(1-alpha/2),zb=zp(beta);
+  const num=(za*Math.sqrt(2*pb*(1-pb))+zb*Math.sqrt(p1*(1-p1)+p2*(1-p2)))**2;
+  const n=Math.ceil(num/(p1-p2)**2);
+  document.getElementById('dp-res').style.display='';
+  document.getElementById('dp-met').innerHTML=mH([
+    {l:'p̄ (pooled)',v:pb.toFixed(4)},{l:'n por grupo',v:n+'',c:'hi'},
+    {l:'n total',v:2*n+''},{l:'|p₁−p₂|',v:Math.abs(p1-p2).toFixed(2)}]);
+  document.getElementById('dp-alr').innerHTML=
+    `<div class="alert as">Con <strong>n = ${n} por grupo</strong> se detecta |p₁−p₂| = ${Math.abs(p1-p2).toFixed(2)} con ${((+beta)*100).toFixed(0)}% de potencia.</div>`;
+}
+
+/* ══ MAS ════════════════════════════════════════════════════════ */
+function calcMAS(){
+  const tipo=document.querySelector('input[name="mas-t"]:checked').value;
+  document.getElementById('mas-sigma-row').style.display=tipo==='mu'?'':'none';
+  document.getElementById('mas-phat-row').style.display=tipo==='p'?'':'none';
+  const N=+document.getElementById('mas-N').value||500;
+  const E=+document.getElementById('mas-e').value||5;
+  const alpha=+document.getElementById('mas-alpha').value||0.05;
+  const z=zp(1-alpha/2);
+  let n0,tag;
+  if(tipo==='mu'){
+    const sigma=+document.getElementById('mas-sigma').value||20;
+    n0=Math.ceil((z*sigma/E)**2);tag='μ';
+  }else{
+    const ph=document.getElementById('mas-ph').value/100;
+    n0=Math.ceil(z*z*ph*(1-ph)/E/E);tag='p';
+  }
+  const n=Math.ceil(n0*N/(n0+N-1));
+  const fpc=n/N;
+  document.getElementById('mas-met').innerHTML=mH([
+    {l:'z_{α/2}',v:z.toFixed(4)},{l:'n₀ (sin FPC)',v:n0+''},
+    {l:'n (con FPC)',v:n+'',c:'hi'},{l:'f = n/N',v:(fpc*100).toFixed(1)+'%'}]);
+  const cls=fpc<0.05?'as':'aw';
+  document.getElementById('mas-alr').innerHTML=
+    `<div class="alert ${cls}">n = <strong>${n}</strong> de N = ${N} unidades (f = ${(fpc*100).toFixed(1)}%).${fpc<0.05?' La fracción de muestreo es < 5% — la corrección por finitud tiene poco impacto.':' La fracción de muestreo es ≥ 5% — la corrección por finitud es importante.'}</div>`;
+}
+
+/* ══ ESTRATIFICADO ══════════════════════════════════════════════ */
+function buildStratTable(){
+  const H=+document.getElementById('strat-H').value||3;
+  const defs=[[200,15],[300,20],[150,12],[250,18],[100,10],[180,14]];
+  let html='';
+  for(let h=0;h<H;h++){
+    html+=`<tr><td class="sh">h=${h+1}</td>
+      <td><input type="number" class="strat-nh" data-h="${h}" value="${defs[h][0]}" min="1" style="width:90px"></td>
+      <td><input type="number" class="strat-sh" data-h="${h}" value="${defs[h][1]}" min="0.01" step="0.1" style="width:90px"></td>
+    </tr>`;
+  }
+  document.getElementById('strat-rows').innerHTML=html;
+}
+function calcEstrat(){
+  const H=+document.getElementById('strat-H').value||3;
+  const alpha=+document.getElementById('strat-alpha').value||0.05;
+  const E=+document.getElementById('strat-e').value||5;
+  const z=zp(1-alpha/2);
+  const Nhs=[],Shs=[];
+  document.querySelectorAll('.strat-nh').forEach(el=>Nhs.push(+el.value||100));
+  document.querySelectorAll('.strat-sh').forEach(el=>Shs.push(+el.value||10));
+  const N=Nhs.reduce((a,v)=>a+v,0);
+  const Whs=Nhs.map(nh=>nh/N);
+  // Proportional allocation
+  const D=(E/z)**2;
+  const numProp=Nhs.reduce((a,nh,h)=>a+nh*Shs[h]**2,0)/N;
+  const n0_prop=Math.ceil(numProp/D);
+  const n_prop=Math.ceil(n0_prop*N/(n0_prop+N-1));
+  const nh_prop=Nhs.map(nh=>Math.max(1,Math.round(n_prop*nh/N)));
+  // Neyman allocation
+  const NSsum=Nhs.reduce((a,nh,h)=>a+nh*Shs[h],0);
+  const n_ney=Math.ceil(Nhs.reduce((a,nh,h)=>a+(nh*Shs[h])**2/nh,0)/((D+Nhs.reduce((a,nh,h)=>a+nh*Shs[h]**2,0)/N**2)));
+  const nh_ney=Nhs.map((nh,h)=>Math.max(1,Math.round(n_ney*nh*Shs[h]/NSsum)));
+  document.getElementById('strat-res').style.display='';
+  document.getElementById('strat-met').innerHTML=mH([
+    {l:'N total',v:N+''},{l:'n prop.',v:n_prop+'',c:'hi'},{l:'n Neyman',v:n_ney+'',c:'hi'},{l:'H estratos',v:H+''}]);
+  let tbl=`<table class="strat-tbl"><thead><tr><th>h</th><th>N_h</th><th>σ_h</th><th>W_h</th><th>n_h Prop.</th><th>%</th><th>n_h Neyman</th><th>%</th></tr></thead><tbody>`;
+  for(let h=0;h<H;h++){
+    const wp=(nh_prop[h]/n_prop*100).toFixed(1),wn=(nh_ney[h]/n_ney*100).toFixed(1);
+    tbl+=`<tr><td class="sh">h=${h+1}</td><td>${Nhs[h]}</td><td>${Shs[h]}</td><td>${(Whs[h]*100).toFixed(1)}%</td>
+      <td><strong>${nh_prop[h]}</strong></td><td>${wp}%</td>
+      <td><strong>${nh_ney[h]}</strong></td><td>${wn}%</td></tr>`;
+  }
+  tbl+=`<tr style="font-weight:700;background:var(--surface2)"><td>Total</td><td>${N}</td><td>—</td><td>100%</td>
+    <td>${nh_prop.reduce((a,v)=>a+v,0)}</td><td>100%</td><td>${nh_ney.reduce((a,v)=>a+v,0)}</td><td>100%</td></tr>`;
+  document.getElementById('strat-detail').innerHTML=tbl+'</tbody></table>';
+}
+
+/* ══ CONGLOMERADOS ══════════════════════════════════════════════ */
+function calcConglom(){
+  const N=+document.getElementById('cg-N').value||100;
+  const M=+document.getElementById('cg-M').value||20;
+  const nmas=+document.getElementById('cg-nmas').value||100;
+  const icc=document.getElementById('cg-icc').value/100;
+  const deff=1+(M-1)*icc;
+  const n_cong=Math.ceil(nmas*deff/M);
+  const total=n_cong*M;
+  document.getElementById('cg-res').style.display='';
+  document.getElementById('cg-met').innerHTML=mH([
+    {l:'DEFF',v:deff.toFixed(3)},{l:'n_cong',v:n_cong+'',c:'hi'},
+    {l:'Obs. esperadas',v:total+''},{l:'ICC',v:icc.toFixed(2)}]);
+  const cls=deff>2?'aw':'ai';
+  document.getElementById('cg-alr').innerHTML=
+    `<div class="alert ${cls}">DEFF = ${deff.toFixed(2)} — se requieren <strong>${n_cong} conglomerados</strong> (≈${total} observaciones) vs ${nmas} en MAS.${deff>2?' El diseño es ineficiente — considerar estratificado.':' El diseño es razonablemente eficiente.'}</div>`;
+}
+
+/* ══ SISTEMÁTICO ════════════════════════════════════════════════ */
+function calcSist(){
+  const N=+document.getElementById('sist-N').value||1000;
+  const n=+document.getElementById('sist-n').value||50;
+  const k=Math.round(N/n);
+  const kReal=N/n;
+  const nReal=Math.floor(N/k);
+  document.getElementById('sist-met').innerHTML=mH([
+    {l:'k = N/n (exacto)',v:kReal.toFixed(2)},{l:'k (redondeado)',v:k+'',c:'hi'},
+    {l:'n efectivo',v:nReal+''},{l:'Inicio r entre',v:`1 y ${k}`}]);
+  document.getElementById('sist-alr').innerHTML=
+    `<div class="alert as">Selecciona aleatoriamente r ∈ [1, ${k}], luego selecciona las unidades: r, r+${k}, r+${2*k}, r+${3*k}, … hasta completar ${nReal} elementos.</div>`+
+    (Math.abs(kReal-k)>0.5?`<div class="alert aw">⚠️ N/n = ${kReal.toFixed(2)} no es entero — el tamaño efectivo de muestra es ${nReal} (no ${n}).</div>`:'');
+}
+
+/* ══ PRUEBA CHI² UNA VARIANZA ═══════════════════════════════════ */
+function calcVarOne(){
+  const n=+document.getElementById('cv-n').value||20;
+  const S2=+document.getElementById('cv-s2').value||150;
+  const s02=+document.getElementById('cv-s02').value||100;
+  const alpha=+document.getElementById('cv-alpha').value||0.05;
+  const h1=document.querySelector('input[name="cv-h"]:checked').value;
+  const df=n-1,chi2=(df*S2)/s02;
+  const pLe=jStat.chisquare.cdf(chi2,df),pGe=1-pLe;
+  let pval,reject,critInfo;
+  if(h1==='ne'){pval=2*Math.min(pLe,pGe);
+    const cL=jStat.chisquare.inv(alpha/2,df),cU=jStat.chisquare.inv(1-alpha/2,df);
+    reject=chi2<cL||chi2>cU;
+    critInfo=`χ²_{${alpha/2},${df}} = ${cL.toFixed(4)} y χ²_{${1-alpha/2},${df}} = ${cU.toFixed(4)}`;}
+  else if(h1==='gt'){pval=pGe;const cU=jStat.chisquare.inv(1-alpha,df);reject=chi2>cU;
+    critInfo=`χ²_{${1-alpha},${df}} = ${cU.toFixed(4)}`;}
+  else{pval=pLe;const cL=jStat.chisquare.inv(alpha,df);reject=chi2<cL;
+    critInfo=`χ²_{${alpha},${df}} = ${cL.toFixed(4)}`;}
+  // IC for σ²
+  const cL2=jStat.chisquare.inv(alpha/2,df),cU2=jStat.chisquare.inv(1-alpha/2,df);
+  const icL=df*S2/cU2,icU=df*S2/cL2;
+  document.getElementById('cv-res').style.display='';
+  document.getElementById('cv-out').innerHTML=
+    resHTML([
+      {l:'H₀',v:`σ² = ${s02}`},{l:'H₁',v:h1==='ne'?`σ² ≠ ${s02}`:h1==='gt'?`σ² > ${s02}`:`σ² < ${s02}`},
+      {l:'Estadístico χ²',v:chi2.toFixed(4)},{l:'gl',v:df+''},
+      {l:'Valor(es) crítico(s)',v:critInfo},
+      {l:'p-valor',v:pstr(pval),c:reject?'sig':'ns'},
+      {l:`IC ${((1-alpha)*100).toFixed(0)}% para σ²`,v:`[${icL.toFixed(2)}, ${icU.toFixed(2)}]`},
+      {l:`IC ${((1-alpha)*100).toFixed(0)}% para σ`,v:`[${Math.sqrt(icL).toFixed(4)}, ${Math.sqrt(icU).toFixed(4)}]`}])+
+    decisionHTML(reject,alpha);
+}
+
+/* ══ PRUEBA F DOS VARIANZAS ═════════════════════════════════════ */
+function calcVarTwo(){
+  const n1=+document.getElementById('fv-n1').value||16,n2=+document.getElementById('fv-n2').value||21;
+  const S1=+document.getElementById('fv-s1').value||46.2,S2=+document.getElementById('fv-s2').value||37.1;
+  const alpha=+document.getElementById('fv-alpha').value||0.05;
+  const h1=document.querySelector('input[name="fv-h"]:checked').value;
+  const df1=n1-1,df2=n2-1,F=S1/S2;
+  const pLe=jStat.centralF.cdf(F,df1,df2),pGe=1-pLe;
+  let pval,reject,critInfo;
+  if(h1==='ne'){pval=2*Math.min(pLe,pGe);
+    const cU=jStat.centralF.inv(1-alpha/2,df1,df2),cL=jStat.centralF.inv(alpha/2,df1,df2);
+    reject=F>cU||F<cL;critInfo=`F_{${alpha/2}} = ${cL.toFixed(4)}, F_{${1-alpha/2}} = ${cU.toFixed(4)}`;}
+  else if(h1==='gt'){pval=pGe;const cU=jStat.centralF.inv(1-alpha,df1,df2);reject=F>cU;critInfo=`F_{${1-alpha},${df1},${df2}} = ${cU.toFixed(4)}`;}
+  else{pval=pLe;const cL=jStat.centralF.inv(alpha,df1,df2);reject=F<cL;critInfo=`F_{${alpha},${df1},${df2}} = ${cL.toFixed(4)}`;}
+  document.getElementById('fv-res').style.display='';
+  document.getElementById('fv-out').innerHTML=
+    resHTML([
+      {l:'H₀',v:'σ₁² = σ₂²'},{l:'H₁',v:h1==='ne'?'σ₁² ≠ σ₂²':h1==='gt'?'σ₁² > σ₂²':'σ₁² < σ₂²'},
+      {l:'F = S₁²/S₂²',v:F.toFixed(4)},{l:'gl₁, gl₂',v:`${df1}, ${df2}`},
+      {l:'Valor crítico',v:critInfo},
+      {l:'p-valor',v:pstr(pval),c:reject?'sig':'ns'}])+
+    decisionHTML(reject,alpha);
+}
+
+/* ══ PRUEBA Z UNA PROPORCIÓN ════════════════════════════════════ */
+function calcPropOne(){
+  const n=+document.getElementById('pz-n').value||200;
+  const x=+document.getElementById('pz-x').value||94;
+  const p0=document.getElementById('pz-p0').value/100;
+  const alpha=+document.getElementById('pz-alpha').value||0.05;
+  const h1=document.querySelector('input[name="pz-h"]:checked').value;
+  const ph=x/n,q0=1-p0,qh=1-ph;
+  const z=(ph-p0)/Math.sqrt(p0*q0/n);
+  const pLe=jStat.normal.cdf(z,0,1),pGe=1-pLe;
+  let pval,reject;
+  if(h1==='ne'){pval=2*(1-jStat.normal.cdf(Math.abs(z),0,1));reject=Math.abs(z)>zp(1-alpha/2);}
+  else if(h1==='gt'){pval=pGe;reject=z>zp(1-alpha);}
+  else{pval=pLe;reject=z<zp(alpha);}
+  // Wald CI
+  const za2=zp(1-alpha/2);
+  const wE=za2*Math.sqrt(ph*qh/n);
+  // Wilson CI
+  const z2=za2**2,wn=n+z2;
+  const wPt=(x+z2/2)/wn,wErr=za2*Math.sqrt(n*ph*qh+z2/4)/wn;
+  document.getElementById('pz-res').style.display='';
+  document.getElementById('pz-out').innerHTML=
+    resHTML([
+      {l:'H₀',v:`p = ${p0}`},{l:'H₁',v:h1==='ne'?`p ≠ ${p0}`:h1==='gt'?`p > ${p0}`:`p < ${p0}`},
+      {l:'p̂ = x/n',v:`${x}/${n} = ${ph.toFixed(4)}`},
+      {l:'Estadístico Z',v:z.toFixed(4)},{l:'p-valor',v:pstr(pval),c:reject?'sig':'ns'},
+      {l:`IC Wald ${((1-alpha)*100).toFixed(0)}%`,v:`[${(ph-wE).toFixed(4)}, ${(ph+wE).toFixed(4)}]`},
+      {l:`IC Wilson ${((1-alpha)*100).toFixed(0)}%`,v:`[${(wPt-wErr).toFixed(4)}, ${(wPt+wErr).toFixed(4)}]`}])+
+    decisionHTML(reject,alpha);
+}
+
+/* ══ PRUEBA Z DOS PROPORCIONES ══════════════════════════════════ */
+function calcPropTwo(){
+  const n1=+document.getElementById('p2-n1').value||150,n2=+document.getElementById('p2-n2').value||180;
+  const x1=+document.getElementById('p2-x1').value||73,x2=+document.getElementById('p2-x2').value||65;
+  const alpha=+document.getElementById('p2-alpha').value||0.05;
+  const h1=document.querySelector('input[name="p2-h"]:checked').value;
+  const ph1=x1/n1,ph2=x2/n2;
+  const pb=(x1+x2)/(n1+n2);
+  const z=(ph1-ph2)/Math.sqrt(pb*(1-pb)*(1/n1+1/n2));
+  const pLe=jStat.normal.cdf(z,0,1),pGe=1-pLe;
+  let pval,reject;
+  if(h1==='ne'){pval=2*(1-jStat.normal.cdf(Math.abs(z),0,1));reject=Math.abs(z)>zp(1-alpha/2);}
+  else if(h1==='gt'){pval=pGe;reject=z>zp(1-alpha);}
+  else{pval=pLe;reject=z<zp(alpha);}
+  const za2=zp(1-alpha/2);
+  const dif=ph1-ph2,eIC=za2*Math.sqrt(ph1*(1-ph1)/n1+ph2*(1-ph2)/n2);
+  document.getElementById('p2-res').style.display='';
+  document.getElementById('p2-out').innerHTML=
+    resHTML([
+      {l:'H₀',v:'p₁ = p₂'},{l:'H₁',v:h1==='ne'?'p₁ ≠ p₂':h1==='gt'?'p₁ > p₂':'p₁ < p₂'},
+      {l:'p̂₁, p̂₂',v:`${ph1.toFixed(4)}, ${ph2.toFixed(4)}`},
+      {l:'p̄ (pooled)',v:pb.toFixed(4)},
+      {l:'Estadístico Z',v:z.toFixed(4)},{l:'p-valor',v:pstr(pval),c:reject?'sig':'ns'},
+      {l:`IC ${((1-alpha)*100).toFixed(0)}% para p₁−p₂`,v:`[${(dif-eIC).toFixed(4)}, ${(dif+eIC).toFixed(4)}]`}])+
+    decisionHTML(reject,alpha);
+}
+
+/* ══ INIT ════════════════════════════════════════════════════════ */
+buildStratTable();
+calcMAS();
+calcSist();
+(function(){const s=localStorage.getItem('theme-mi');if(s==='light')toggleTheme();})();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>
